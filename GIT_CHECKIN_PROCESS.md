@@ -76,29 +76,22 @@ If the push is rejected (`non-fast-forward` / `fetch first`), the remote has com
 ## 4. Feature development workflow
 
 ```mermaid
-flowchart TD
-    A([Feature needs to be developed]) --> B{Jira ticket exists?}
-    B -- No --> C[Create ticket on ENG board]
-    B -- Yes --> D
-    C --> D[Update Jira ticket to In Progress]
-    D --> E["Get latest main<br/>git checkout main<br/>git pull origin main"]
-    E --> F["Create feature branch<br/>git checkout -b Name/ENG-123-featurename"]
-    F --> G[Develop and commit in small steps]
-    G --> H["Sync with main<br/>git fetch origin<br/>git merge origin/main"]
-    H --> I[Test locally: build, lint, unit tests, manual smoke test]
-    I --> J{All tests pass?}
-    J -- No --> G
-    J -- Yes --> K["Push branch<br/>git push -u origin Name/ENG-123-featurename"]
-    K --> L[Create Pull Request to main, link Jira ticket]
-    L --> M[Update Jira ticket to In Review]
-    M --> N{PR approved and CI green?}
-    N -- No, changes requested --> G
-    N -- Yes --> O[Merge PR and delete branch]
-    O --> P[Give demo]
-    P --> Q{Demo accepted?}
-    Q -- No --> G
-    Q -- Yes --> R[Close Jira story/task - Done]
-    R --> S([End])
+flowchart LR
+    A([Feature needed]) --> B[Jira ticket<br/>In Progress]
+    B --> C[Pull latest main<br/>+ create branch]
+    C --> D[Develop<br/>+ commit]
+    D --> E[Merge main<br/>+ test locally]
+    E --> F{Tests pass?}
+    F -- No --> D
+    F -- Yes --> G[Push branch<br/>+ create PR]
+    G --> H[Jira<br/>In Review]
+    H --> I{Approved?}
+    I -- No --> D
+    I -- Yes --> J[Merge PR]
+    J --> K[Demo]
+    K --> L{Accepted?}
+    L -- No --> D
+    L -- Yes --> M([Close Jira])
 ```
 
 ### Steps
@@ -146,31 +139,23 @@ flowchart TD
 ## 5. Bug fix workflow
 
 ```mermaid
-flowchart TD
-    A([Bug reported]) --> B{Jira bug ticket exists?}
-    B -- No --> C[Create bug ticket on ENG board]
-    B -- Yes --> D
-    C --> D[Update Jira ticket to In Progress]
-    D --> E["Get latest main<br/>git checkout main<br/>git pull origin main"]
-    E --> F["Create bugfix branch<br/>git checkout -b Name/ENG-456-fix-description"]
-    F --> G[Reproduce the bug locally]
-    G --> H[Write a failing regression test]
-    H --> I[Fix the bug and commit with fix: prefix]
-    I --> J["Sync with main<br/>git fetch origin<br/>git merge origin/main"]
-    J --> K[Test locally: regression test, full test suite, lint, manual verification]
-    K --> L{All tests pass and bug is fixed?}
-    L -- No --> I
-    L -- Yes --> M["Push branch<br/>git push -u origin Name/ENG-456-fix-description"]
-    M --> N[Create PR to main: root cause, fix, how verified, link Jira]
-    N --> O[Update Jira ticket to In Review]
-    O --> P{PR approved and CI green?}
-    P -- No, changes requested --> I
-    P -- Yes --> Q[Merge PR and delete branch]
-    Q --> R[Give demo]
-    R --> S{Demo accepted?}
-    S -- No --> I
-    S -- Yes --> T[Close Jira bug - Done]
-    T --> U([End])
+flowchart LR
+    A([Bug reported]) --> B[Jira bug ticket<br/>In Progress]
+    B --> C[Pull latest main<br/>+ create branch]
+    C --> D[Reproduce<br/>+ failing test]
+    D --> E[Fix<br/>+ commit]
+    E --> F[Merge main<br/>+ test locally]
+    F --> G{Tests pass?}
+    G -- No --> E
+    G -- Yes --> H[Push branch<br/>+ create PR]
+    H --> I[Jira<br/>In Review]
+    I --> J{Approved?}
+    J -- No --> E
+    J -- Yes --> K[Merge PR]
+    K --> L[Demo]
+    L --> M{Accepted?}
+    M -- No --> E
+    M -- Yes --> N([Close Jira])
 ```
 
 The steps are the same as the feature workflow, with these differences:
@@ -188,23 +173,15 @@ The steps are the same as the feature workflow, with these differences:
 A release branch freezes a set of features for testing and release while `main` keeps moving. Only bug fixes go into a release branch, never new features.
 
 ```mermaid
-flowchart TD
-    A([Features for release are merged to main]) --> B["Release owner cuts branch<br/>git checkout main && git pull origin main<br/>git checkout -b release/1.2.0<br/>git push -u origin release/1.2.0"]
-    B --> C[Test release branch: regression, QA, demo]
+flowchart LR
+    A([Features merged to main]) --> B[Cut release branch<br/>from main]
+    B --> C[Test release<br/>QA + demo]
     C --> D{Bug found?}
-    D -- Yes --> E[Create Jira bug ticket and move to In Progress]
-    E --> F["Branch from release<br/>git checkout release/1.2.0<br/>git pull origin release/1.2.0<br/>git checkout -b Name/ENG-789-fix-description"]
-    F --> G[Fix, add regression test, test locally]
-    G --> H[Push and create PR targeting release/1.2.0]
-    H --> I{Approved and CI green?}
-    I -- No --> G
-    I -- Yes --> J[Merge PR into release/1.2.0]
-    J --> K["Port fix to main<br/>cherry-pick the fix onto a branch from main<br/>and open a PR to main"]
-    K --> C
-    D -- No --> L[Release owner tags version<br/>git tag -a v1.2.0 -m 'Release 1.2.0'<br/>git push origin v1.2.0]
-    L --> M[Deploy release]
-    M --> N[Close Jira tickets after demo]
-    N --> O([End])
+    D -- Yes --> E[Fix branch from release<br/>+ PR to release]
+    E --> F[Merge to release<br/>+ port fix to main]
+    F --> C
+    D -- No --> G[Tag version<br/>+ deploy]
+    G --> H([Close Jira after demo])
 ```
 
 ### Steps
